@@ -1,0 +1,486 @@
+<html>
+   <head>
+      <title>StoryOf</title>
+   
+   <style>
+			body {
+				background:#000;
+				color: #eee;
+				padding:0;
+				margin:0;
+				font-weight:bold;
+				overflow:hidden;
+
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				background-image: url('space-3.gif')
+			}
+			a {
+
+				color: #0080ff;
+			}
+
+			b { color:orange }
+			#blocker {
+
+				position: absolute;
+
+				width: 100%;
+				height: 100%;
+
+				background-color: rgba(0,0,0,0.5);
+
+			}
+
+			#instructions {
+
+				width: 100%;
+				height: 100%;
+
+				display: -webkit-box;
+				display: -moz-box;
+				display: box;
+
+				-webkit-box-orient: horizontal;
+				-moz-box-orient: horizontal;
+				box-orient: horizontal;
+
+				-webkit-box-pack: center;
+				-moz-box-pack: center;
+				box-pack: center;
+
+				-webkit-box-align: center;
+				-moz-box-align: center;
+				box-align: center;
+
+				color: #ffffff;
+				text-align: center;
+
+
+			}
+			
+			.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+			</style>
+			<link rel="stylesheet" type="text/css" href="light-modal.min.css" >
+
+	  <script src="js/three.min.js"></script>
+	  <script src="js/stats.min.js"></script>
+	  <script src="js/FlyControls.js"></script>
+	  <script src="js/DragControls.js"></script>
+      <script src="js/Detector.js"></script>
+	  <script src="js/three.js"></script>
+	  <script src="js/PointerLockControls.js"></script>
+	  <script src="js/OrbitControls.js"></script>
+	  <script src="js/dat.gui.min.js"></script>
+	  
+	  </head>
+	   <body>
+	   
+	   <embed  text="audio/mpeg" src="EnterCyborg.mp3" loop="TRUE" autostart="true" hidden="true" volume="0.6"/>
+	   <div id="blocker">
+			<div id="instructions">
+				<span style="font-size:50px">The Story Of Cyborg</span>
+				<br />
+				(W, A, S, D = Navigate || Q, E = Rotate Camera || Mouse = Move Camera || Press Esc to leave comic Page)
+					<br />
+					<br />
+					Run through the blue cubes to see the comics.
+					<br />
+					<br />
+					You're done once you see Earth.
+					<br />
+					<br />
+					Click to start.
+					
+			</div>
+		</div>
+		
+		<!-- The Modal -->
+<div id="popimagem" class="modal">
+  <!-- Modal content -->
+  <div id="pop2" class="modal-content">
+   <span id="fe" class="close">&times;</span>
+    <img id="imagens" src="https://images-na.ssl-images-amazon.com/images/I/71i3vOP%2BevL.jpg" alt="from unsplash">
+  </div>
+
+</div>
+		
+		
+      <script>
+		
+			var container, stats;
+
+			
+			var cameraCube, sceneCube;
+			var textureEquirec, textureCube, textureSphere;
+			var cubeMesh;
+			var sphereMaterial;
+			var camera;
+			
+			
+			
+			var kount = 0;
+			var geometry;
+			var scene, raycaster, renderer;
+
+			var objects =[];
+			var objects2 = [];
+			
+			var mouse = new THREE.Vector2(), INTERSECTED;
+			
+
+			var controls, clock = new THREE.Clock();
+			var velocity = new THREE.Vector3();
+
+			var blocker = document.getElementById( 'blocker' );
+			var instructions = document.getElementById( 'instructions' );
+			var popimagem = document.getElementById('popimagem');
+			var pop2 = document.getElementById('pop2');
+			var span = document.getElementsByClassName('close')[1];
+			var textureB;
+
+			var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+
+			if ( havePointerLock ) {
+
+				var element = document.body;
+
+				var pointerlockchange = function ( event ) {
+
+					if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
+
+						controlsEnabled = true;
+						controls.enabled = true;
+
+						blocker.style.display = 'none';
+
+					} else {
+
+						controls.enabled = true;
+
+
+						instructions.style.display = '';
+
+					}
+
+				};
+
+				var pointerlockerror = function ( event ) {
+
+					instructions.style.display = '';
+
+				};
+
+				// Hook pointer lock state change events
+				document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+				document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+				document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+
+				document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+				document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+				document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+
+				instructions.addEventListener( 'click', function ( event ) {
+
+					instructions.style.display = 'none';
+
+					// Ask the browser to lock the pointer
+					
+
+				}, false );
+
+			} else {
+
+				instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
+
+			}
+			
+			
+			init();
+			animate();
+
+			
+			
+			function init() {
+				
+			
+				renderer = new THREE.WebGLRenderer({ antialias: false,alpha:true });
+				renderer.setClearColor(0x000000, 0);
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				
+			
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 15000 );
+				camera.position.z = 1000;
+
+				controls = new THREE.FlyControls( camera );
+				controls.movementSpeed = 200;
+				controls.rollSpeed = Math.PI / 15;
+
+				
+				
+				scene = new THREE.Scene();
+				scene.fog = new THREE.Fog( 0x000000, 1, 17000 );
+				//scene.background = background;
+				scene.autoUpdate = false;
+
+				var light = new THREE.PointLight( 0xff2200 );
+				light.position.set( 0, 0, 0 );
+				scene.add( light );
+
+				var light2 = new THREE.DirectionalLight( 0x00FFFF );
+				light2.position.set( 0, 0, 1 ).normalize();
+				scene.add( light2 );
+				
+				var light3 = new THREE.DirectionalLight( 0x00FFFF );
+				light3.position.set( 1, 0, 0 ).normalize();
+				scene.add( light3 );
+				var light = new THREE.DirectionalLight( 0x00FFFF );
+				light.position.set( 0, 0, 0 ).normalize();
+				scene.add( light );
+				
+				var lightAmb = new THREE.AmbientLight(0x00FFFF);
+				scene.add(lightAmb);
+
+		
+				
+				raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+				//kubos
+
+				geometry = new THREE.BoxBufferGeometry( 100, 100, 100 );
+
+				//var texture = new THREE.TextureLoader().load( 'http://payload120.cargocollective.com/1/1/60195/4719173/476925_4124490_lz.jpg' );
+				var texture = new THREE.TextureLoader().load( 'https://i.imgur.com/BXY2h8y.jpg');
+				textureB = new THREE.TextureLoader().load( 'https://i.imgur.com/ZiyuUVL.jpg');
+				
+				
+				
+				
+				// Materials
+				
+				/*var cubeMaterials = [
+				
+					new THREE.MeshBasicMaterial( {map: new THREE.CubeTextureLoader().load( "https://i.imgur.com/7UAUKOP.jpg" ) , side: THREE.DoubleSide } ),
+					new THREE.MeshBasicMaterial( {map: new THREE.CubeTextureLoader().load( "https://i.imgur.com/olCSjxe.jpg" ) , side: THREE.DoubleSide } ),
+					new THREE.MeshBasicMaterial( {map: new THREE.CubeTextureLoader().load( "https://i.imgur.com/0xzoCff.jpg" ) , side: THREE.DoubleSide } ),
+					new THREE.MeshBasicMaterial( {map: new THREE.CubeTextureLoader().load( "https://i.imgur.com/th236a2.jpg" ) , side: THREE.DoubleSide } ),
+					new THREE.MeshBasicMaterial( {map: new THREE.CubeTextureLoader().load( "https://i.imgur.com/NH8cdXG.jpg" ) , side: THREE.DoubleSide } ),
+					new THREE.MeshBasicMaterial( {map: new THREE.CubeTextureLoader().load( "https://i.imgur.com/4v0tybd.jpg" ) , side: THREE.DoubleSide } )
+				];
+				*/
+			//////////////////////////////////////////
+				
+				
+
+				for ( var i = 0; i < 8; i ++ ) {
+
+					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { map: texture } ) );
+
+					posX = object.position.x;
+					object.position.x = Math.random() * 1700 - 400;
+					posY = object.position.y;
+					object.position.y = Math.random() * 1500 - 400;
+					posZ = object.position.z;
+					object.position.z = Math.random() * 1200 - 400;
+
+					object.rotation.x = Math.random() * 2 * Math.PI;
+					object.rotation.y = Math.random() * 2 * Math.PI;
+					object.rotation.z = Math.random() * 2 * Math.PI;
+
+	
+					
+					
+					scene.add( object );
+					//objects.push(object);
+					objects[i] = object;
+					
+					
+					
+
+				}
+
+				for ( var j = 0; j < 20; j ++ ) {
+
+					var object2 = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { map: textureB } ) );
+
+					
+					object2.position.x = Math.random() * 2700 - 500;
+					
+					object2.position.y = Math.random() * 2500 - 600;
+					
+					object2.position.z = Math.random() * 2200 - 600;
+
+					object2.rotation.x = Math.random() * 2 * Math.PI;
+					object2.rotation.y = Math.random() * 2 * Math.PI;
+					object2.rotation.z = Math.random() * 2 * Math.PI;
+
+	
+					
+					
+					scene.add( object2 );
+					//objects.push(object);
+					objects2[j] = object2;
+					
+					
+					
+
+				}
+
+
+				
+				
+				
+				renderer = new THREE.WebGLRenderer( { alpha: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild(renderer.domElement);
+
+				var dragControls = new THREE.DragControls( objects, camera, renderer.domElement );
+				dragControls.addEventListener( 'dragstart', function ( event ) { controls.enabled = false; } );
+				dragControls.addEventListener( 'dragend', function ( event ) { controls.enabled = true; } );
+				
+
+				//
+				
+				
+				window.addEventListener( 'resize', onWindowResize, false );
+
+
+			}
+
+			setInterval(
+			
+			function checkCol(){
+				for(var i = 0; i < objects.length; i++){
+					if(camera.position.z >= objects[i].position.z - 100 && camera.position.z <= objects[i].position.z + 100 &&
+					camera.position.x >= objects[i].position.x - 100 && camera.position.x <= objects[i].position.x + 100 &&
+					camera.position.y >= objects[i].position.y - 100 && camera.position.y <= objects[i].position.y + 100){
+					
+					/*var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { map: textureB } ) );
+					posX = object.position.x;
+					posY = object.position.y;
+					posZ = object.position.z;
+					
+					scene.add( object );
+					objects[kount] = object;
+					*/
+					
+					if(kount == 0){
+					document.getElementById("imagens").src='https://i.imgur.com/BtR5u2B.jpg';
+					} else if(kount == 1 ){
+					document.getElementById("imagens").src='https://i.imgur.com/gAv4cLE.jpg';
+					} else if(kount == 2 ){
+					document.getElementById("imagens").src='https://i.imgur.com/DsITUuG.jpg';
+					document.body.style.backgroundImage = "url('space-1.jpg')";
+					} else if(kount == 3 ){
+					document.getElementById("imagens").src='https://i.imgur.com/ZMZelbN.jpg';
+					} else if(kount == 4 ){
+					document.getElementById("imagens").src='https://i.imgur.com/KAHafqn.jpg';
+					} else if(kount == 5 ){
+					document.body.style.backgroundImage = "url('space-2.jpg')";
+					document.getElementById("imagens").src='https://i.imgur.com/DQjBaUM.jpg';
+					} else if(kount == 6 ){
+					document.getElementById("imagens").src='https://i.imgur.com/0EK2D1S.jpg';
+					} else if(kount == 7 ){
+					document.getElementById("imagens").src='https://i.imgur.com/eobydbC.jpg';
+					document.body.style.backgroundImage = "url('space-3.jpg')";
+					kount = 0;
+					
+					}
+
+					popimagem.style.display = 'block';
+					objects[i] = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { map: textureB } ) );
+					window.onkeyup = function (event) {
+						if (event.keyCode == 27) {
+							popimagem.style.display = '';
+							pop2.style.display = '';
+							instructions.style.display = '';
+							blocker.style.display = 'none';
+							kount = kount +1;
+							}
+						
+						}
+					}
+				}
+			
+			}, 30);
+			
+			
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				render();
+				
+
+			}
+
+			
+			
+			function render() {
+
+				controls.update( clock.getDelta() );
+
+				scene.updateMatrixWorld();
+
+
+				
+				
+				
+				renderer.render( scene, camera );
+
+			}
+
+	  </script>
+   </body>
+</html>
